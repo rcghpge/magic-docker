@@ -2,7 +2,7 @@
 
 This repository contains the docker configuration for the magic container image.
 The magic container image is based on different base images, depending on the use case.
-All images have pixi installed in `/usr/local/bin/magic` and are ready to use.
+All images have magic installed in `/usr/local/bin/magic` and are ready to use.
 
 ## Pulling the images
 
