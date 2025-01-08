@@ -1,4 +1,4 @@
-# magic-docker (based on pixi-docker)
+# magic-cli (based on pixi written in Rust)
 
 This repository contains the docker configuration for the magic container image.
 The magic container image is based on different base images, depending on the use case.
