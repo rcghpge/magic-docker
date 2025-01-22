@@ -27,7 +27,7 @@ The following example uses the magic docker image as a base image for a multi-st
 It also makes use of the `shell-hook` feature of magic to define a convenient entry point (after executing the `shell-hook` script, the environment is activated.
 
 ```Dockerfile
-FROM ghcr.io/prefix-dev/magic:latest AS build
+FROM ghcr.io/modular/magic:latest AS build
 
 # copy source code, pixi.toml and magic.lock to the container
 COPY . /app
@@ -43,7 +43,7 @@ RUN magic shell-hook -e prod > /shell-hook.sh
 # extend the shell-hook script to run the command passed to the container
 RUN echo 'exec "$@"' >> /shell-hook.sh
 
-FROM ubuntu:22.04 AS production
+FROM ubuntu:24.04 AS production
 
 # only copy the production environment into prod container
 # please note that the "prefix" (path) needs to stay the same as in the build container
