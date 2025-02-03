@@ -81,5 +81,6 @@ These images have the tags `bullseye`, `0.x.y-bullseye`, ...
 ### NVIDIA/CUDA
 
 Images based on [`nvidia/cuda`](https://hub.docker.com/r/nvidia/cuda) are available using the tags `cuda-<cuda-version>-jammy`, `cuda-<cuda-version>-focal`, `0.x.y-cuda-<cuda-version>-jammy`, ...
+
 ---
 
