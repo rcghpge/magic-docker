@@ -5,8 +5,8 @@ This repository contains the docker configuration for the magic container image.
 The magic container image is based on different base images, depending on the use case.
 All images have magic installed in `/usr/local/bin/magic` and are ready to use.
 
+---
 ## Pulling the images
-
 The images are [available on "GHCR" (Github Container Registry)](https://github.com/modular/magic-docker/pkgs/container/magic).
 You can pull them using docker like so:
 
@@ -22,6 +22,7 @@ There are different tags for different base images available:
 - `noble-cuda-12.6.3` - based on `nvidia/cuda:12.6.3-ubuntu24.04`
 - ... and more
 
+---
 ## Usage with shell-hook
 
 The following example uses the magic docker image as a base image for a multi-stage build.
@@ -59,7 +60,7 @@ ENTRYPOINT ["/bin/bash", "/shell-hook.sh"]
 
 CMD ["start-server"]
 ```
-
+---
 ## Images
 
 There are images based on `ubuntu`, `debian` and `nvidia/cuda` available.
@@ -80,3 +81,5 @@ These images have the tags `bullseye`, `0.x.y-bullseye`, ...
 ### NVIDIA/CUDA
 
 Images based on [`nvidia/cuda`](https://hub.docker.com/r/nvidia/cuda) are available using the tags `cuda-<cuda-version>-jammy`, `cuda-<cuda-version>-focal`, `0.x.y-cuda-<cuda-version>-jammy`, ...
+---
+
