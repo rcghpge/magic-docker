@@ -1,4 +1,4 @@
-name: MojoBSD Build
+name: MojoBSD Sandbox Build
 
 on:
   push:
