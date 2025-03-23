@@ -1,0 +1,123 @@
+name: MojoBSD Build
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  DEFAULT_BASE_IMAGE: ubuntu:noble
+
+jobs:
+  version:
+    name: Check if version changed
+    runs-on: ubuntu-latest
+    outputs:
+      push: ${{ steps.push.outputs.push }}
+      version-changed: ${{ steps.version-metadata.outputs.changed }}
+      new-version: ${{ steps.version-metadata.outputs.newVersion }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Quantco/ui-actions/version-metadata@v1
+        id: version-metadata
+        with:
+          file: Dockerfile
+          token: ${{ secrets.GITHUB_TOKEN }}
+          version-extraction-override: "regex:ARG MAGIC_VERSION=(.*)"
+      - name: Determine if pushing images
+        id: push
+        run: echo "push=${{ steps.version-metadata.outputs.changed == 'true' && github.event_name == 'push' && github.ref_name == 'main' }}" >> $GITHUB_OUTPUT
+
+  build:
+    needs: version
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      packages: write
+    strategy:
+      fail-fast: false
+      matrix:
+        base-image:
+          - ubuntu:noble # 24.04
+          - ubuntu:jammy # 22.04
+          - ubuntu:focal # 20.04
+    steps:
+      - name: Checkout source
+        uses: actions/checkout@v4
+      - name: Set image variables
+        id: image-variables
+        env:
+          IMAGE: ${{ matrix.base-image }}
+        run: |
+          base_image="${{ matrix.base-image }}"
+          tag="${base_image##*:}"
+          platforms="linux/amd64,linux/arm64"
+          is_default="false"
+          if [ "$base_image" == "${{ env.DEFAULT_BASE_IMAGE }}" ]; then
+            is_default="true"
+          fi
+          echo "tag=$tag" >> $GITHUB_OUTPUT
+          echo "platforms=$platforms" >> $GITHUB_OUTPUT
+          echo "is-default=$is_default" >> $GITHUB_OUTPUT
+      - name: Get docker metadata
+        id: metadata
+        uses: docker/metadata-action@v1
+        with:
+          images: ghcr.io/modular/magic
+          flavor: latest=false
+          tags: |
+            type=raw,value=latest,priority=1000,enable=${{ steps.image-variables.outputs.is-default }}
+            type=raw,value=${{ steps.image-variables.outputs.tag }},priority=900
+            type=semver,pattern={{version}},enable=${{ steps.image-variables.outputs.is-default }},value=${{ needs.version.outputs.new-version }},priority=800
+            type=semver,pattern={{version}}-${{ steps.image-variables.outputs.tag }},value=${{ needs.version.outputs.new-version }},priority=500
+      - name: Setup docker buildx
+        uses: docker/setup-buildx-action@v1
+      - name: Login to GHCR
+        uses: docker/login-action@v1
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: Build Docker images
+        id: build
+        uses: docker/build-push-action@v2
+        with:
+          provenance: false
+          platforms: ${{ steps.image-variables.outputs.platforms }}
+          push: ${{ needs.version.outputs.push == 'true' }}
+          build-args: |
+            BASE_IMAGE=${{ matrix.base-image }}
+            MAGIC_VERSION=${{ needs.version.outputs.new-version }}
+          tags: ${{ steps.metadata.outputs.tags }}
+          labels: ${{ steps.metadata.outputs.labels }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ steps.image-variables.outputs.tag }}
+          path: ${{ steps.metadata.outputs.bake-file }}
+      - name: Run tests
+        if: needs.version.outputs.push == 'true'
+        run: |
+          docker images
+          docker run --rm ghcr.io/modular/magic:${{ needs.version.outputs.new-version }}-${{ steps.image-variables.outputs.tag }} magic --version
+          docker run --rm ghcr.io/modular/magic:${{ needs.version.outputs.new-version }}-${{ steps.image-variables.outputs.tag }} sh -c "mkdir /app && cd /app && magic init && magic add python && magic run python --version"
+      - name: Image digest
+        run: echo ${{ steps.build.outputs.digest }}
+
+  release:
+    needs: [version, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    if: needs.version.outputs.push == 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - name: Push ${{ needs.version.outputs.new-version }} tag
+        run: |
+          git tag ${{ needs.version.outputs.new-version }}
+          git push origin ${{ needs.version.outputs.new-version }}
+      - name: Create release
+        uses: softprops/action-gh-release@v2
+        with:
+          generate_release_notes: true
+          tag_name: ${{ needs.version.outputs.new-version }}
