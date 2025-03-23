@@ -21,7 +21,6 @@ There are different tags for different base images available:
 - `bullseye` - based on `debian:bullseye`
 - `noble-cuda-12.6.3` - based on `nvidia/cuda:12.6.3-ubuntu24.04`
 - Some are initial Docker build images I am testing for a stealth project. For Modular's official Magic Docker images and repository, see the official [repository](https://github.com/modular/magic-docker)
-- ... and more
 
 ---
 ## Usage with shell-hook
