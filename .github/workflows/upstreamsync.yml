@@ -1,0 +1,20 @@
+name: Magic Upstream Sync
+
+on:
+  schedule:
+    - cron: '0 2 * * *'  # Auto-syncs daily at 2:00 AM UTC
+  workflow_dispatch:      # manual sync feature for Github Actions UI
+
+jobs:
+  sync-fork:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Sync Fork with Upstream
+        uses: tgymnich/fork-sync@v1
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          upstream_repository: ORIGINAL_OWNER/ORIGINAL_REPO
+          upstream_branch: main
+          target_branch: main
+          force: false
