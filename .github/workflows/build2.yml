@@ -118,5 +118,3 @@ jobs:
         with:
           generate_release_notes: true
           tag_name: ${{ needs.version.outputs.new-version }}
-      - name: Fork Sync
-        uses: tgymnich/fork-sync@v2.0.10
